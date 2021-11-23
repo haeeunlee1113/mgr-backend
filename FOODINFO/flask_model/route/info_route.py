@@ -1,11 +1,21 @@
 import sys
 
 from flask import Blueprint, jsonify
+from flask import request
+from sqlalchemy import engine, create_engine
 
 from FOODINFO.flask_model.model import food_info_model as food_info
+from FOODINFO.flask_model.model.food_info_model import HazardousIngredient, Segment
+from sqlalchemy.orm import sessionmaker
 
-info_route = Blueprint('info_route',__name__) 
-
+info_route = Blueprint('info_route',__name__)
+engine = create_engine(
+    'mysql+pymysql://mgrsdp:ajrrjfl!@mgrsdp.c8ybdvubh7vg.ap-northeast-2.rds.amazonaws.com:3306/mgrsdp',
+    echo=True
+)
+Session = sessionmaker(bind=engine)
+Session.configure(bind=engine)
+session = Session()
 
 #이름만 불러오는 api 입니다.
 @info_route.route('/select/food-list',methods=['GET'])
@@ -22,18 +32,25 @@ def select_data():
     return jsonify(food_list)
 
 
-#@info_route.route('/select_all',methods=['GET'])
-# def select_all_data(): 
-#     select_user = my_user.MyUser.query.all() 
-#     if len(select_user) == 0: 
-#         return "user does not exists" 
-#     else: 
-#         user_list = [] 
-#         for user in select_user: 
-#             data = dict(id = user.id , name = user.user_name, created_at = user.created_at, udpated_at = user.udpated_at) 
-#             user_list.append(data) 
-#             
-#    return jsonify(user_list) 
+
+@info_route.route('/select/food-segment',methods=['GET'])
+def select_segment():
+    ingredient = request.args.get('ingredient', type=str, default='').replace("\n","")
+
+    segments = session.query(HazardousIngredient,Segment).\
+            filter(HazardousIngredient.seq_segment == Segment.seq_segment).\
+            filter(food_info.HazardousIngredient.ingredient_name.like(ingredient))\
+            .all()
+    print(segments)
+
+    if len(segments) == 0:
+        return "data does not exist"
+    else:
+        segment_list=[]
+        for segment in segments:
+            data = dict(seq_segment = segment[0].seq_segment , ingredient_name = segment[0].ingredient_name, explanation = segment[0].explanation, news_link = segment[0].news_link, segment_name = segment[1].segment_name)
+            segment_list.append(data)
+    return jsonify(segment_list)
 
 '''
 @info_route.route('/insert',methods=['POST']) 
@@ -54,7 +71,6 @@ def insert_data():
         return "success" 
     except Exception as e: 
         return "fail"
-    
     
 @info_route.route('/update/<target>',methods=['POST']) 
 def update_data(target): 
