@@ -1,7 +1,11 @@
 
 # coding: utf-8
 from flask_sqlalchemy import SQLAlchemy
+
+from app import app
+
 db = SQLAlchemy()
+db.init_app(app)
 class FoodInfo(db.Model):
     """ 
     table name : foodInfo 
