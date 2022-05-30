@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 info_route = Blueprint('info_route',__name__)
 engine = create_engine(
-    'mysql+pymysql://mgrsdp:ajrrjfl!@mgrsdp.c8ybdvubh7vg.ap-northeast-2.rds.amazonaws.com:3306/mgrsdp',
+    '**',
     echo=True
 )
 Session = sessionmaker(bind=engine)
